@@ -26,10 +26,16 @@ não se conversam.
 de ela chamar HubSpot e Stripe direto pelas Netlify Functions. É o que fecha a
 camada 7 do `CLAUDE.md` e faz o grafo virar fonte de verdade da experiência.
 
-**Bloqueio ativo:** o GitHub recusa `push` com **403** nos dois repositórios
-("Claude doesn't have GitHub access ... for your organization"). Enquanto isso
-não for resolvido, nenhuma alteração feita em sessão chega ao GitHub. Para
-destravar: reconectar o GitHub em claude.ai → Conectores.
+**Publicado:** o acesso de escrita ao GitHub, que passou o dia recusando
+`push` com 403, voltou no fim da tarde de 17/09 — e as duas branches foram
+publicadas:
+
+- `mvp-vasco` → branch `claude/projeto-vasco-ascake` (monorepo com `demo/` +
+  este diário)
+- `clubbrain-demo` → branch `claude/merge-mvp-vasco` (backend em `mvp-vasco/`)
+
+Nenhuma das duas foi levada para a `main`. A do `clubbrain-demo` em especial
+merece revisão antes: a `main` dispara deploy no Netlify.
 
 **Referência rápida:** página com o mapa dos dois repos, tabela de "onde está
 o quê" e links — <https://claude.ai/artifact/TMfbHNzSeTZ84BEQy3iHrQ>
@@ -46,7 +52,8 @@ o quê" e links — <https://claude.ai/artifact/TMfbHNzSeTZ84BEQy3iHrQ>
 - Feitos dois merges com `git subtree`, preservando histórico em ambos os
   sentidos: `clubbrain-demo` dentro de `mvp-vasco/demo/`, e `mvp-vasco`
   dentro de `clubbrain-demo/mvp-vasco/` (branch `claude/merge-mvp-vasco`).
-  **Nenhum dos dois foi publicado** — 403 no push. Existem como bundles.
+  Ambos publicados como branch (não na `main`) depois que o acesso de escrita
+  ao GitHub voltou, no fim da tarde.
 - No merge para dentro do `clubbrain-demo`, adicionada regra no `netlify.toml`
   devolvendo 404 em `/mvp-vasco/*`: como o `publish` é a raiz, sem isso o
   Netlify serviria o código do backend como arquivo estático.
