@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Compra confirmada</title>
+<link rel="stylesheet" href="/assets/fan-site.css">
+<style>
+  .diff-row{ display:flex; align-items:center; justify-content:space-between; padding:10px 0; border-bottom:1px solid var(--line); font-size:13.5px; }
+  .diff-row:last-child{ border-bottom:none; }
+  .diff-row .lbl{ color:var(--paper-dim); }
+  .diff-row .vals{ font-family:'Oswald',sans-serif; display:flex; align-items:center; gap:8px; }
+  .diff-row .before{ color:var(--paper-dim); text-decoration:line-through; }
+  .diff-row .after{ color:var(--gold); font-weight:600; }
+  .status-icon{ width:64px; height:64px; border-radius:50%; display:flex; align-items:center; justify-content:center; margin:0 auto 18px; }
+  .status-icon.ok{ background:rgba(31,174,100,.16); border:1px solid rgba(31,174,100,.4); }
+  .status-icon.err{ background:rgba(226,35,26,.16); border:1px solid rgba(226,35,26,.4); }
+  .status-icon.loading{ background:rgba(255,164,0,.12); border:1px solid rgba(255,164,0,.35); }
+  .center{ text-align:center; }
+</style>
+</head>
+<body>
+
+<div class="fan-topbar">
+  <div class="brand"><b>Club de Regatas Vasco da Gama</b><span>Confirmação de compra</span></div>
+  <div class="badge">Checkout Stripe · ambiente de teste</div>
+</div>
+
+<div class="fan-wrap" style="max-width:560px;">
+
+  <div id="state-loading" class="fan-card center">
+    <div class="status-icon loading"><span class="spinner" style="border-color:rgba(255,164,0,.3); border-top-color:var(--gold);"></span></div>
+    <h2 style="font-size:20px; margin-bottom:8px;">Confirmando seu pagamento…</h2>
+    <div class="fan-desc" style="margin:0 auto;">Verificando a sessão no Stripe e atualizando seu perfil real no CRM do Vasco.</div>
+  </div>
+
+  <div id="state-ok" class="fan-card center" style="display:none;">
+    <div class="status-icon ok">
+      <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#1fae64" stroke-width="2.5"><path d="M20 6L9 17l-5-5"/></svg>
+    </div>
+    <h2 style="font-size:20px; margin-bottom:6px;">Pagamento confirmado!</h2>
+    <div class="fan-desc" id="ok-sub" style="margin:0 auto 22px;"></div>
+
+    <div style="text-align:left; background:var(--ink); border:1px solid var(--line); border-radius:12px; padding:16px 18px; margin-bottom:20px;">
+      <div style="font-size:11px; text-transform:uppercase; letter-spacing:.04em; color:var(--paper-dim); margin-bottom:8px;">Seu perfil real acabou de mudar no CRM do clube</div>
+      <div id="diff-rows"></div>
+    </div>
+
+    <a href="/vasco/loja" class="fan-btn ghost" style="margin-bottom:10px;">Voltar ao ShopVasco</a>
+  </div>
+
+  <div id="state-err" class="fan-card center" style="display:none;">
+    <div class="status-icon err">
+      <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#ff8c85" stroke-width="2.5"><path d="M18 6L6 18M6 6l12 12"/></svg>
+    </div>
+    <h2 style="font-size:20px; margin-bottom:8px;">Algo não deu certo</h2>
+    <div class="fan-desc center" id="err-msg" style="margin:0 auto 20px;"></div>
+    <a href="/vasco/loja" class="fan-btn ghost">Voltar à loja</a>
+  </div>
+
+</div>
+
+<div class="fan-footer">
+  Ambiente de demonstração — Virtual Fans, by <span class="brand-wordmark-mini">CLUBBR<span class="bw-a">A</span>IN</span>.ai
+</div>
+
+<script>
+const FIELD_LABELS = {
+  numero_compras: 'Número de compras',
+  ticket_medio: 'Ticket médio',
+  produto_favorito: 'Produto favorito',
+  ltv_torcedor: 'LTV (valor de vida)',
+  partidas_assistidas_temporada: 'Partidas assistidas na temporada',
+  taxa_presenca: 'Taxa de presença',
+  fan_score: 'Fan Score',
+  engajamento_app: 'Engajamento no app',
+};
+function fmtVal(key, v){
+  if(v === undefined || v === null || v === '') return '—';
+  if(key === 'ltv_torcedor' || key === 'ticket_medio') return 'R$ ' + Number(v).toLocaleString('pt-BR');
+  if(key === 'taxa_presenca' || key === 'engajamento_app') return v + '%';
+  return v;
+}
+
+async function confirmar(){
+  const params = new URLSearchParams(window.location.search);
+  const sessionId = params.get('session_id');
+  if(!sessionId){
+    document.getElementById('state-loading').style.display = 'none';
+    document.getElementById('state-err').style.display = 'block';
+    document.getElementById('err-msg').textContent = 'Link de confirmação inválido — falta o session_id do Stripe.';
+    return;
+  }
+  try{
+    const r = await fetch('/.netlify/functions/hubspot-admin', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'fulfill_stripe_order', session_id: sessionId }),
+    });
+    const d = await r.json();
+    if(!r.ok || !d.ok) throw new Error(d.error || 'Não foi possível confirmar a compra.');
+
+    document.getElementById('state-loading').style.display = 'none';
+    document.getElementById('state-ok').style.display = 'block';
+    const quem = (d.fanName || '').trim() || d.fanEmail;
+    document.getElementById('ok-sub').textContent = `${quem} acabou de garantir ${d.itemName || 'sua compra'} — e isso já está gravado de verdade no HubSpot do clube.`;
+
+    const keys = Object.keys(d.after).filter(k => FIELD_LABELS[k] && d.before[k] !== d.after[k]);
+    const rowsHtml = keys.map(k => `
+      <div class="diff-row">
+        <span class="lbl">${FIELD_LABELS[k]}</span>
+        <span class="vals"><span class="before">${fmtVal(k, d.before[k])}</span> → <span class="after">${fmtVal(k, d.after[k])}</span></span>
+      </div>`).join('');
+    document.getElementById('diff-rows').innerHTML = rowsHtml || '<div class="diff-row"><span class="lbl">Perfil atualizado no HubSpot</span></div>';
+  }catch(e){
+    document.getElementById('state-loading').style.display = 'none';
+    document.getElementById('state-err').style.display = 'block';
+    document.getElementById('err-msg').textContent = e.message;
+  }
+}
+confirmar();
+</script>
+
+</body>
+</html>

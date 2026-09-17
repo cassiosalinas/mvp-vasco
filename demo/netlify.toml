@@ -1,0 +1,40 @@
+[build]
+  publish = "."
+  functions = "netlify/functions"
+
+[functions]
+  node_bundler = "esbuild"
+
+# Garante que /.netlify/functions/chat responda mesmo com trailing slash
+[[redirects]]
+  from = "/api/chat"
+  to = "/.netlify/functions/chat"
+  status = 200
+
+# URLs limpas da jornada do torcedor (ShopVasco / Sócio Torcedor) — servem
+# os arquivos .html reais de dentro de vasco/ sem expor a extensão.
+[[redirects]]
+  from = "/vasco/loja"
+  to = "/vasco/loja.html"
+  status = 200
+[[redirects]]
+  from = "/vasco/socio"
+  to = "/vasco/socio.html"
+  status = 200
+[[redirects]]
+  from = "/vasco/sucesso"
+  to = "/vasco/sucesso.html"
+  status = 200
+[[redirects]]
+  from = "/vasco/virtual"
+  to = "/vasco/virtual.html"
+  status = 200
+
+# Painel interno completo (Cockpit, CDP, Ontologia, Agentes de IA — o mesmo
+# index.html de sempre) também acessível dentro da família de URLs do Vasco.
+# "OS" = Operating System, ecoando o próprio posicionamento do produto
+# (ClubBrain como "sistema operacional" de IA do clube).
+[[redirects]]
+  from = "/vasco/os"
+  to = "/index.html"
+  status = 200
