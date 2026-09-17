@@ -8,6 +8,24 @@ Stack: FastAPI + PostgreSQL (Identity) + Neo4j (Knowledge Graph) +
 Claude API (Intelligence — ver vision.md item 1; requer
 `ANTHROPIC_API_KEY` no `.env`, senão cai num template de texto fixo).
 
+## Os dois lados do projeto
+
+Este repositorio e um monorepo com as duas metades do ClubBrain Vasco, que
+ate 17/09/2026 viviam em repositorios separados:
+
+| Pasta | O que e | Stack | Estado |
+|---|---|---|---|
+| raiz (`backend/`, `ontology/`, `database/`) | Backend real: ontologia, Knowledge Graph, Fan 360, agentes | Python/FastAPI + Neo4j + Postgres | Roda local via Docker; sem deploy |
+| `demo/` | Demo publica: jornada do torcedor + integracoes reais (HubSpot, Stripe, Minu) | HTML/JS + Netlify Functions (Node) | No ar via Netlify |
+
+As duas metades ainda **nao se conversam**: a `demo/` fala com HubSpot e
+Stripe diretamente pelas Netlify Functions, sem passar pelo backend da raiz.
+Ligar as duas (a demo consumindo `/api/v1/...` em vez de ir direto nas APIs
+externas) e o trabalho que fecha a camada 7 do `CLAUDE.md`.
+
+O historico dos dois projetos foi preservado: os 113 commits do
+`clubbrain-demo` (desde 27/08) estao neste log, trazidos com `git subtree`.
+
 ## Rodando localmente (5 minutos)
 
 ```bash
@@ -73,7 +91,14 @@ mvp-vasco/
 │   ├── migrations/001_init.sql
 │   └── seed/seed.py           ← gera ~500 fãs fictícios (pseudonimizados)
 ├── docs/architecture/vision.md
-└── frontend/                  ← plugar demo.clubbrain.ai aqui depois
+├── demo/                      ← demo publica (era o repo clubbrain-demo)
+│   ├── index.html             ← painel interno (Cockpit/CDP/Ontologia/Agentes)
+│   ├── vasco/                 ← loja, socio, sucesso, virtual (jornada do fa)
+│   ├── assets/fan-site.{js,css}
+│   ├── netlify/functions/     ← chat.js, hubspot-admin.js, stripe-checkout.js
+│   ├── netlify.toml           ← redirects /vasco/loja, /vasco/os etc.
+│   └── godaddy/               ← equivalente PHP do chat, p/ hospedar fora do Netlify
+└── frontend/                  ← demos internas do backend (cockpit, fan-explorer)
 ```
 
 ## Endpoints do Alpha (SEE + começo de UNDERSTAND)
@@ -92,12 +117,44 @@ mvp-vasco/
   loja, patrocínio, fãs em risco) sem passar pelo LLM — usado pelo
   Cockpit e pela tool `get_club_overview` do agente Executive
 
+## A demo publica (`demo/`)
+
+Jornada do torcedor e painel interno, com integracoes que chamam APIs de
+verdade (nao mock):
+
+- **HubSpot** (`demo/netlify/functions/hubspot-admin.js`) — Fan 360 lendo os
+  contatos reais, propriedades organizadas em grupos, notas de interacao,
+  tarefas de retencao associadas ao contato, e pontos de fidelidade debitados
+  no resgate de recompensa.
+- **Stripe** (`demo/netlify/functions/stripe-checkout.js`) — compra real que
+  realimenta o painel.
+- **Minu** — catalogo de recompensas com logos de parceiros reais.
+- **Paginas** — `/vasco/loja` (ShopVasco), `/vasco/socio` (Socio Torcedor),
+  `/vasco/virtual` (Museu Virtual), `/vasco/os` (painel interno).
+
+**Deploy:** o Netlify hoje aponta para o repositorio `clubbrain-demo`, que
+continua existindo e no ar — a juncao aqui foi aditiva, nao removeu nada.
+Para passar a publicar a partir deste monorepo, e preciso religar o site ao
+repo `mvp-vasco` no painel do Netlify **e definir `demo` como Base
+directory** (Site configuration -> Build & deploy -> Build settings). Sem esse
+ajuste o Netlify nao acha o `netlify.toml`, que agora esta em `demo/`.
+Enquanto isso nao for feito, editar `demo/` aqui **nao** publica nada.
+
+> Cuidado com o nome: a URL `/demo/` do backend FastAPI serve a pasta
+> `frontend/` (demos internas), enquanto a pasta `demo/` e o site do Netlify.
+> Sao coisas diferentes; nenhuma das duas quebra a outra.
+
 ## Status
 
-Ontologia, schema do grafo, backend completo (Fan 360, segmentos, IA
-genérica + 3 agentes especializados), seed cobrindo os 6 domínios da
-ontologia, e um frontend de demo (`/demo/fan-explorer.html`) — tudo
-rodado e verificado via GitHub Codespaces (ver `CLAUDE.md` para o brief
-original). Ainda não plugado: front-end real (`demo.clubbrain.ai`) e
-deploy em produção (Neo4j Aura + Supabase + Railway — recomendado no
-`CLAUDE.md`, ainda não configurado).
+**Backend (raiz):** ontologia, schema do grafo, backend completo (Fan 360,
+segmentos, IA generica + 3 agentes especializados), seed cobrindo os 6
+dominios da ontologia e demos internas em `frontend/` — rodado e verificado
+via GitHub Codespaces. Sem deploy: Neo4j Aura + Supabase + Railway seguem
+recomendados no `CLAUDE.md` e nao configurados.
+
+**Demo (`demo/`):** no ar pelo Netlify, com HubSpot/Stripe/Minu reais.
+
+**O elo que falta:** a demo ainda fala direto com as APIs externas, sem
+passar pelo backend. Plugar a demo nos endpoints `/api/v1/...` e o que fecha
+a camada 7 do `CLAUDE.md` e faz o Knowledge Graph virar a fonte de verdade
+da experiencia.

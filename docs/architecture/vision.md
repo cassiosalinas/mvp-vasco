@@ -29,10 +29,14 @@ natural (`POST /api/v1/ai/ask`) sobre o Knowledge Graph.
    próprio, expostas em `POST /api/v1/agents/{nome}/ask`. `/ai/ask`
    continua existindo como persona genérica (todas as tools, sem
    restrição) para compatibilidade com quem já chama esse endpoint.
-7. Experience — não plugado ainda. `demo.clubbrain.ai` deveria consumir
-   estes endpoints no lugar dos dados simulados atuais. Existe um
-   frontend de demo mínimo em `frontend/fan-explorer.html`
-   (`/demo/fan-explorer.html`), mas não é o front real do produto.
+7. Experience — não plugado ainda, mas agora mora neste repo: a demo
+   pública (antes o repositório `clubbrain-demo`) está em `demo/`, com a
+   jornada do torcedor e o painel interno servidos pelo Netlify. Ela
+   consome HubSpot, Stripe e Minu **diretamente** pelas Netlify Functions
+   (`demo/netlify/functions/`), sem passar por estes endpoints — é
+   exatamente esse desvio que a camada 7 precisa eliminar. Existem ainda
+   as demos internas mínimas em `frontend/` (`/demo/fan-explorer.html`,
+   `/demo/cockpit.html`), que falam com a API mas não são o produto.
 
 ## Princípio não-negociável
 
