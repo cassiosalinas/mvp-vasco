@@ -1,0 +1,406 @@
+<title>Cockpit MVP Vasco</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@600;700;800;900&family=Source+Serif+4:ital,wght@0,400;0,500;0,600;0,700;1,400;1,600&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+<style>
+  /* ---------- tokens: light (bare root) ---------- */
+  :root{
+    --pitch:#f6f8f2;
+    --surface:#ffffff;
+    --surface-2:#eef2e9;
+    --line:rgba(12,40,26,.14);
+    --ink:#0c1a14;
+    --ink-dim:#425a4e;
+    --ink-faint:#6d8577;
+    --accent:#1c9351;
+    --accent-2:#0b8a9c;
+    --risk:#c23b2e;
+    --risk-bg:#fbeae7;
+
+    --display:"Big Shoulders Display",system-ui,sans-serif;
+    --body:"Source Serif 4",Georgia,"Times New Roman",serif;
+    --mono:"IBM Plex Mono",ui-monospace,"SFMono-Regular",Menlo,monospace;
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --pitch:#08130f;
+      --surface:#101f19;
+      --surface-2:#152720;
+      --line:rgba(150,230,200,.14);
+      --ink:#f2f8f4;
+      --ink-dim:#9bbcad;
+      --ink-faint:#638576;
+      --accent:#43d477;
+      --accent-2:#1fb9cf;
+      --risk:#ff8b7a;
+      --risk-bg:#2a1613;
+    }
+  }
+  :root[data-theme="dark"]{
+    --pitch:#08130f;
+    --surface:#101f19;
+    --surface-2:#152720;
+    --line:rgba(150,230,200,.14);
+    --ink:#f2f8f4;
+    --ink-dim:#9bbcad;
+    --ink-faint:#638576;
+    --accent:#43d477;
+    --accent-2:#1fb9cf;
+    --risk:#ff8b7a;
+    --risk-bg:#2a1613;
+  }
+
+  *{box-sizing:border-box;}
+  html{text-size-adjust:100%;}
+  body{
+    margin:0;
+    background:var(--pitch);
+    color:var(--ink);
+    font-family:var(--body);
+    font-size:17px;
+    line-height:1.6;
+    padding:0 20px;
+  }
+  ::selection{background:var(--accent);color:var(--pitch);}
+
+  .wrap{max-width:760px;margin:0 auto;padding-block:56px 90px;}
+
+  a{color:var(--accent);text-decoration-thickness:1.5px;text-underline-offset:3px;}
+
+  /* ---------- header ---------- */
+  .eyebrow{
+    font-family:var(--mono);
+    font-size:.72rem;
+    letter-spacing:.14em;
+    text-transform:uppercase;
+    color:var(--accent);
+    display:flex;
+    align-items:center;
+    gap:10px;
+    margin-bottom:18px;
+  }
+  .eyebrow::before{
+    content:"";
+    width:7px;height:7px;border-radius:50%;
+    background:var(--accent);
+    box-shadow:0 0 10px var(--accent);
+    flex:none;
+  }
+
+  h1{
+    font-family:var(--display);
+    font-weight:800;
+    font-size:clamp(2.6rem,7vw,4.1rem);
+    line-height:.98;
+    letter-spacing:-.01em;
+    margin:0 0 14px;
+    text-wrap:balance;
+  }
+  .lede{
+    font-size:1.15rem;
+    color:var(--ink-dim);
+    max-width:58ch;
+    margin:0 0 34px;
+  }
+  .live-link{
+    display:inline-flex;align-items:center;gap:9px;
+    font-family:var(--mono);font-size:.86rem;
+    padding:9px 14px;border:1px solid var(--line);border-radius:99px;
+    color:var(--ink);text-decoration:none;
+    background:var(--surface);
+  }
+  .live-link::before{
+    content:"";width:7px;height:7px;border-radius:50%;
+    background:var(--accent);flex:none;
+  }
+  .live-link:hover{border-color:var(--accent);}
+
+  /* ---------- stat strip ---------- */
+  .stats{
+    display:grid;
+    grid-template-columns:repeat(4,1fr);
+    gap:1px;
+    background:var(--line);
+    border:1px solid var(--line);
+    border-radius:14px;
+    overflow:hidden;
+    margin:38px 0 44px;
+  }
+  .stat{
+    background:var(--surface);
+    padding:18px 16px;
+    display:flex;flex-direction:column;gap:6px;
+  }
+  .stat .n{
+    font-family:var(--display);
+    font-weight:800;
+    font-size:2.05rem;
+    line-height:1;
+    font-variant-numeric:tabular-nums;
+    letter-spacing:-.01em;
+  }
+  .stat .l{
+    font-family:var(--mono);
+    font-size:.68rem;
+    letter-spacing:.04em;
+    color:var(--ink-faint);
+    text-transform:uppercase;
+    line-height:1.35;
+  }
+  @media (max-width:620px){ .stats{grid-template-columns:repeat(2,1fr);} }
+
+  /* ---------- pipeline sections ---------- */
+  .pipeline-nav{
+    display:flex;flex-wrap:wrap;gap:8px;
+    font-family:var(--mono);font-size:.78rem;color:var(--ink-faint);
+    margin:0 0 60px;
+    padding:14px 16px;
+    border:1px dashed var(--line);
+    border-radius:10px;
+  }
+  .pipeline-nav b{color:var(--ink);font-weight:600;}
+  .pipeline-nav .arrow{color:var(--accent);}
+  .pipeline-nav .off{opacity:.45;}
+
+  section.stage{margin-bottom:58px;}
+  .stage-eyebrow{
+    font-family:var(--mono);font-size:.74rem;letter-spacing:.16em;
+    text-transform:uppercase;color:var(--accent);
+    margin-bottom:10px;
+  }
+  h2{
+    font-family:var(--display);
+    font-weight:700;
+    font-size:clamp(1.5rem,4vw,1.9rem);
+    line-height:1.08;
+    margin:0 0 14px;
+    text-wrap:balance;
+  }
+  .stage p{margin:0 0 16px;max-width:64ch;color:var(--ink-dim);}
+  .stage p strong{color:var(--ink);font-weight:600;}
+
+  ul.built{list-style:none;margin:20px 0 0;padding:0;display:flex;flex-direction:column;}
+  ul.built li{
+    display:flex;gap:14px;align-items:baseline;
+    padding:11px 0;
+    border-top:1px solid var(--line);
+    font-size:.98rem;
+  }
+  ul.built li:last-child{border-bottom:1px solid var(--line);}
+  ul.built li .tick{
+    font-family:var(--mono);color:var(--accent);font-size:.85rem;flex:none;
+    width:1.1em;
+  }
+  ul.built li .txt{color:var(--ink-dim);}
+  ul.built li .txt strong{color:var(--ink);font-weight:600;}
+  ul.built li code{
+    font-family:var(--mono);font-size:.85em;color:var(--ink);
+    background:var(--surface-2);padding:1px 6px;border-radius:5px;
+  }
+
+  .callout{
+    margin-top:22px;
+    padding:16px 18px;
+    background:var(--surface);
+    border:1px solid var(--line);
+    border-left:3px solid var(--accent);
+    border-radius:8px;
+    font-size:.92rem;
+    color:var(--ink-dim);
+  }
+  .callout strong{color:var(--ink);}
+
+  .action-box{
+    background:var(--surface);
+    border:1px solid var(--line);
+    border-radius:12px;
+    padding:22px 24px;
+  }
+  .action-box p:last-child{margin-bottom:0;}
+
+  /* ---------- infra cards ---------- */
+  .infra-grid{
+    display:grid;grid-template-columns:repeat(3,1fr);gap:14px;
+    margin:22px 0 26px;
+  }
+  @media (max-width:620px){ .infra-grid{grid-template-columns:1fr;} }
+  .infra-card{
+    background:var(--surface);
+    border:1px solid var(--line);
+    border-radius:12px;
+    padding:18px 18px 20px;
+  }
+  .infra-card .svc{
+    font-family:var(--display);font-weight:700;font-size:1.15rem;
+    margin-bottom:4px;
+  }
+  .infra-card .role{
+    font-family:var(--mono);font-size:.72rem;color:var(--accent-2);
+    text-transform:uppercase;letter-spacing:.06em;margin-bottom:10px;
+  }
+  .infra-card .detail{font-size:.86rem;color:var(--ink-dim);line-height:1.5;}
+  .infra-card .detail code{font-family:var(--mono);font-size:.82em;color:var(--ink);}
+
+  .overview-strip{
+    display:grid;grid-template-columns:repeat(3,1fr);gap:1px;
+    background:var(--line);border:1px solid var(--line);border-radius:12px;
+    overflow:hidden;margin-bottom:8px;
+  }
+  @media (max-width:620px){ .overview-strip{grid-template-columns:1fr 1fr;} }
+  .ov{background:var(--surface);padding:14px 15px;}
+  .ov .n{font-family:var(--display);font-weight:800;font-size:1.3rem;font-variant-numeric:tabular-nums;}
+  .ov .l{font-family:var(--mono);font-size:.64rem;color:var(--ink-faint);text-transform:uppercase;letter-spacing:.03em;margin-top:2px;}
+  .ov .n.risk{color:var(--risk);}
+
+  .club-colors{
+    display:inline-flex;align-items:center;gap:10px;
+    font-family:var(--mono);font-size:.78rem;color:var(--ink-faint);
+    margin-top:14px;
+  }
+  .swatch{width:14px;height:14px;border-radius:3px;border:1px solid var(--line);flex:none;}
+
+  /* ---------- checklist ---------- */
+  .checklist{list-style:none;margin:20px 0 0;padding:0;display:flex;flex-direction:column;gap:10px;}
+  .checklist li{
+    display:flex;gap:12px;align-items:flex-start;
+    background:var(--surface);border:1px solid var(--line);
+    border-radius:10px;padding:13px 16px;font-size:.92rem;
+  }
+  .checklist li .box{
+    width:16px;height:16px;border:1.5px solid var(--ink-faint);border-radius:4px;
+    flex:none;margin-top:2px;
+  }
+  .checklist li .txt{color:var(--ink-dim);}
+  .checklist li .txt strong{color:var(--ink);font-weight:600;}
+
+  footer{
+    margin-top:70px;
+    padding-top:22px;
+    border-top:1px solid var(--line);
+    display:flex;justify-content:space-between;flex-wrap:wrap;gap:10px;
+    font-family:var(--mono);font-size:.78rem;color:var(--ink-faint);
+  }
+</style>
+
+<div class="wrap">
+
+  <div class="eyebrow">ClubBrain · Resumo do Alpha</div>
+  <h1>MVP Vasco</h1>
+  <p class="lede">Do dado fictício até um agente de IA respondendo perguntas sobre o torcedor — construído numa sessão, no ar em produção, gratuito.</p>
+  <a class="live-link" href="https://mvp-vasco-production.up.railway.app/demo/" target="_blank" rel="noopener">mvp-vasco-production.up.railway.app/demo/</a>
+
+  <div class="stats">
+    <div class="stat"><div class="n">500</div><div class="l">torcedores<br>fictícios</div></div>
+    <div class="stat"><div class="n">6/6</div><div class="l">domínios da<br>ontologia</div></div>
+    <div class="stat"><div class="n">4</div><div class="l">agentes de<br>IA ativos</div></div>
+    <div class="stat"><div class="n">3</div><div class="l">serviços de<br>nuvem, grátis</div></div>
+  </div>
+
+  <p>Em uma única sessão de trabalho, construímos a fundação inteira do MVP Vasco: um backend que liga um banco de identidade (Postgres) a um grafo de conhecimento (Neo4j), populado com um clube fictício — 500 torcedores, 4 patrocinadores, 8 produtos de loja, 40 publicações em redes sociais — e uma camada de inteligência artificial que responde perguntas sobre esses dados através de quatro agentes especializados. Está tudo no ar, hospedado em três serviços de nuvem distintos, sem depender do computador de ninguém.</p>
+
+  <p>O texto abaixo segue a mesma lógica que guiou a arquitetura desde o início — a filosofia do próprio projeto: <strong>dado bruto vira modelo, modelo vira inteligência, inteligência (um dia) vira ação.</strong></p>
+
+  <div class="pipeline-nav">
+    <span><b>DATA</b></span><span class="arrow">→</span>
+    <span><b>ONTOLOGY</b></span><span class="arrow">→</span>
+    <span><b>INTELLIGENCE</b></span><span class="arrow">→</span>
+    <span class="off">ACTION</span>
+  </div>
+
+  <section class="stage">
+    <div class="stage-eyebrow">Data</div>
+    <h2>Um clube inteiro, simulado com cuidado</h2>
+    <p>Nada disso é dado real do Vasco — o clube ainda não liberou acesso. Mas cada torcedor, compra e post foi gerado seguindo a mesma estrutura que os dados reais um dia vão ter, para que trocar um pelo outro não exija reescrever nada.</p>
+    <ul class="built">
+      <li><span class="tick">＋</span><span class="txt"><strong>500 torcedores</strong> (<code>Fan</code>) com histórico de sócio-torcedor (<code>Membership</code>)</span></li>
+      <li><span class="tick">＋</span><span class="txt"><strong>4 patrocinadores</strong> com contratos e ativações de marca</span></li>
+      <li><span class="tick">＋</span><span class="txt"><strong>8 produtos de loja</strong>, ~300 pedidos, ~560 itens comprados</span></li>
+      <li><span class="tick">＋</span><span class="txt"><strong>4 contas sociais</strong>, 40 publicações, 857 interações de torcedores</span></li>
+      <li><span class="tick">＋</span><span class="txt">23 jogadores, 10 partidas, 1 estádio fictício</span></li>
+    </ul>
+    <div class="callout"><strong>Princípio seguido à risca:</strong> nome, e-mail e telefone de cada torcedor fictício são hasheados (SHA-256 + sal) antes de tocar qualquer banco — mesmo sendo dado inventado, tratado como se fosse real desde o dia 1.</div>
+  </section>
+
+  <section class="stage">
+    <div class="stage-eyebrow">Ontology</div>
+    <h2>26 objetos, 6 domínios, um mapa do negócio</h2>
+    <p>O brief do projeto citava uma ontologia e um schema de grafo como "já produzidos" — não estavam em lugar nenhum. Foram desenhados do zero a partir da descrição do clube, e viraram <em>constraints</em> e índices reais no Neo4j.</p>
+    <ul class="built">
+      <li><span class="tick">＋</span><span class="txt"><strong>Core</strong> — <code>Club</code>, <code>Person</code>, <code>Fan</code>, <code>Employee</code>, <code>Membership</code></span></li>
+      <li><span class="tick">＋</span><span class="txt"><strong>Sport</strong> — <code>Team</code>, <code>Player</code>, <code>Match</code>, <code>Competition</code>, <code>Season</code>, <code>Venue</code></span></li>
+      <li><span class="tick">＋</span><span class="txt"><strong>FanIntelligence</strong> — <code>FanProfile</code>, <code>FanSegment</code>, <code>ChurnRisk</code>, <code>EngagementEvent</code>, <code>FanSurvey</code></span></li>
+      <li><span class="tick">＋</span><span class="txt"><strong>Commercial</strong> — <code>Sponsor</code>, <code>SponsorshipContract</code>, <code>SponsorActivation</code></span></li>
+      <li><span class="tick">＋</span><span class="txt"><strong>Commerce</strong> — <code>Product</code>, <code>Order</code>, <code>OrderItem</code>, <code>Ticket</code></span></li>
+      <li><span class="tick">＋</span><span class="txt"><strong>Media</strong> — <code>SocialAccount</code>, <code>MediaContent</code>, <code>MediaConsumption</code></span></li>
+    </ul>
+  </section>
+
+  <section class="stage">
+    <div class="stage-eyebrow">Intelligence</div>
+    <h2>Uma API que enxerga o torcedor — e quatro agentes que conversam sobre ele</h2>
+    <p>Esta é a camada que a diretoria realmente vê: perguntas em português, respondidas com números de verdade.</p>
+    <ul class="built">
+      <li><span class="tick">＋</span><span class="txt"><code>GET /fans/{id}/360</code> — identidade + engajamento + risco de churn, numa tela só</span></li>
+      <li><span class="tick">＋</span><span class="txt"><code>GET /segments/at-risk</code> — lista de público por regra de negócio</span></li>
+      <li><span class="tick">＋</span><span class="txt"><code>GET /club/overview</code> — receita recorrente, receita de loja, patrocínio, risco</span></li>
+      <li><span class="tick">＋</span><span class="txt"><code>POST /agents/{executive｜fan｜marketing}/ask</code> — três personas, cada uma com seu foco</span></li>
+      <li><span class="tick">＋</span><span class="txt"><strong>Cockpit</strong> — o painel visual que junta tudo isso numa tela só</span></li>
+    </ul>
+    <div class="callout"><strong>Regra que não muda:</strong> a IA nunca toca o banco diretamente — só chama três funções controladas e auditáveis. Cada agente (Executive, Fan, Marketing) só enxerga o subconjunto de funções do seu papel.</div>
+  </section>
+
+  <section class="stage">
+    <div class="stage-eyebrow">Action</div>
+    <h2>De propósito, ainda não</h2>
+    <div class="action-box">
+      <p>O próprio brief do projeto proíbe expandir escopo antes do "gate" de 90 dias — sem motor de ação automatizado, sem integrações de escrita, sem aprovação de campanha. Este Alpha cobre <strong>ver</strong> e o começo de <strong>entender</strong>; agir sobre o dado (disparar uma campanha, mover um torcedor de segmento) fica para a próxima fase, com governança definida antes de qualquer dado real circular.</p>
+    </div>
+  </section>
+
+  <section class="stage" style="margin-bottom:44px">
+    <h2>Onde isso está rodando, hoje</h2>
+    <p>Três serviços de nuvem, todos no plano gratuito, nenhum depende do seu computador ou do Codespace estar aberto.</p>
+    <div class="infra-grid">
+      <div class="infra-card">
+        <div class="svc">Railway</div>
+        <div class="role">Backend</div>
+        <div class="detail">FastAPI em container, deploy automático a cada <code>push</code> no GitHub.</div>
+      </div>
+      <div class="infra-card">
+        <div class="svc">Supabase</div>
+        <div class="role">Identidade</div>
+        <div class="detail">Postgres gerenciado, região São Paulo, conexão via pooler IPv4.</div>
+      </div>
+      <div class="infra-card">
+        <div class="svc">Neo4j Aura</div>
+        <div class="role">Grafo</div>
+        <div class="detail">Knowledge graph — engajamento, risco, segmentos, patrocínio.</div>
+      </div>
+    </div>
+
+    <div class="overview-strip">
+      <div class="ov"><div class="n">261</div><div class="l">memberships ativos</div></div>
+      <div class="ov"><div class="n">R$ 35.682</div><div class="l">receita recorrente / mês</div></div>
+      <div class="ov"><div class="n">R$ 165.552</div><div class="l">receita de loja paga</div></div>
+      <div class="ov"><div class="n">R$ 13,4 M</div><div class="l">valor de patrocínio / ano</div></div>
+      <div class="ov"><div class="n risk">44</div><div class="l">torcedores em risco</div></div>
+      <div class="ov"><div class="n">500</div><div class="l">torcedores no total</div></div>
+    </div>
+    <div class="club-colors"><span class="swatch" style="background:#0c1a14"></span><span class="swatch" style="background:#f4faf6;background:var(--surface)"></span>até as cores do clube estão no modelo: <code>Club.primary_color = "black-white"</code></div>
+  </section>
+
+  <section class="stage" style="margin-bottom:0">
+    <h2>O que falta pra ficar redondo</h2>
+    <ul class="checklist">
+      <li><span class="box"></span><span class="txt"><strong>Chave da Anthropic</strong> — sem ela, os quatro agentes respondem com texto de modelo fixo, não com IA de verdade.</span></li>
+      <li><span class="box"></span><span class="txt"><strong>Trocar duas senhas</strong> — Supabase e Neo4j Aura apareceram em texto puro no chat em algum momento da configuração.</span></li>
+      <li><span class="box"></span><span class="txt"><strong>Trial do Railway</strong> — 30 dias ou ~US$5 em créditos; depois disso precisa de cartão pra continuar no ar.</span></li>
+      <li><span class="box"></span><span class="txt"><strong>Neo4j Aura Free</strong> — se autodeleta após 30 dias sem uso.</span></li>
+    </ul>
+  </section>
+
+  <footer>
+    <span>github.com/cassiosalinas/mvp-vasco</span>
+    <span>16 de setembro de 2026</span>
+  </footer>
+
+</div>
