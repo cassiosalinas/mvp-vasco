@@ -16,6 +16,15 @@
 3. Ao final da sessão, **acrescente uma entrada no topo do histórico do
    `docs/LOG.md`**: data, o que mudou, o que ficou aberto.
 
+**Isso é automático:** `.claude/hooks/session-start.sh` roda a cada abertura
+de sessão e injeta no contexto o "Onde paramos" do `docs/LOG.md`, os commits
+recentes e o índice das conversas anteriores. Quando o hook dispara por
+abertura (`startup`/`resume`), ele pede para a primeira resposta da sessão
+apresentar esse resumo ao usuário — que foi um pedido explícito dele: ao
+abrir o Claude, ver o que já foi feito sem precisar perguntar. **Cumpra
+isso.** O hook lê o diário e não o `git log` porque o clone em sessão na
+nuvem é raso, e o `git log` sozinho mostra um histórico truncado.
+
 ## Contexto
 
 O **ClubBrain** é um "Sports Intelligence Operating System": conecta os dados

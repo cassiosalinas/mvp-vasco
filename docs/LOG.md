@@ -90,6 +90,32 @@ pode morar só no transcript. Mora aqui, no `docs/LOG.md`, ou num commit.
 
 ## Histórico
 
+### 17/09/2026 (noite) — Briefing automático ao abrir o projeto
+
+O pedido: "quando eu abrir o Claude, apareça tudo o que eu fiz". Atendido por
+`.claude/hooks/session-start.sh`, registrado em `.claude/settings.json`.
+
+- O hook roda a cada abertura e injeta no contexto: o "Onde paramos" deste
+  diário, os 12 commits recentes e o índice das conversas. Em `startup`/
+  `resume` ele pede o resumo de boas-vindas; em `compact`/`clear` manda só o
+  estado, sem repetir o cumprimento no meio do trabalho.
+- Lê o diário, não o `git log`: **o clone em sessão na nuvem é raso** — 64
+  commits chegam, os 113 da demo desde 27/08 não. O `git log` sozinho mostra
+  histórico truncado; o diário é o único lugar com a narrativa inteira.
+- Sem rede e sem instalação: só leitura, roda em menos de um segundo, igual
+  na nuvem e na máquina.
+- `scripts/transcript_digest.py` transforma transcripts `.jsonl` em markdown
+  (só o que o usuário digitou, ou `--full` com respostas e ferramentas),
+  mascarando credenciais. Os `.jsonl` crus ficam no `.gitignore`.
+- `.gitattributes` normaliza fim de linha: as cópias locais de `CLAUDE.md` e
+  `README.md` estavam com CRLF, o que fazia o git marcar as 113 e as 160
+  linhas como alteradas sem nenhuma mudança real.
+
+**Aberto — e é o que falta para o hook funcionar de verdade:** ele só passa a
+valer para sessões novas depois de estar na **`main`**. Enquanto viver só na
+branch `claude/funny-turing-kb0ixy`, uma sessão aberta a partir da `main` não
+o executa.
+
 ### 17/09/2026 (noite) — Índice das sessões; correção do estado da `main`
 
 - Recuperado o índice das 5 sessões da conta e registrado na seção "Onde está
