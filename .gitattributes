@@ -1,0 +1,20 @@
+# Normaliza fim de linha no commit. Os arquivos deste repo usam LF, mas
+# copias editadas no Windows chegam com CRLF — e ai o git marca o arquivo
+# INTEIRO como alterado (113 de 113 linhas em CLAUDE.md, 160 de 160 no
+# README.md, verificado em 17/09/2026) mesmo sem nenhuma mudanca real de
+# conteudo. Isso destroi o diff, polui o historico e cria conflito onde
+# nao existe divergencia.
+#
+# `text=auto eol=lf` faz o git converter na entrada: pode-se editar no
+# Windows sem que o CRLF chegue ao commit.
+* text=auto eol=lf
+
+# Binarios: nunca converter.
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.pdf binary
+*.woff binary
+*.woff2 binary

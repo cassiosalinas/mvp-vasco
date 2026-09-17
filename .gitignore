@@ -6,3 +6,9 @@ venv/
 node_modules/
 .DS_Store
 *.log
+
+# Transcripts de sessao (.jsonl) trazidos da maquina para virar resumo com
+# scripts/transcript_digest.py. Ficam FORA do git de proposito: contem a
+# conversa inteira, inclusive chaves de API coladas no chat.
+transcripts/
+*.jsonl
