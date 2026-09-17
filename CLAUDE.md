@@ -3,6 +3,19 @@
 > Cole este arquivo como `CLAUDE.md` na raiz do repositório. O Claude Code lê
 > esse arquivo automaticamente como contexto persistente do projeto.
 
+## Ao retomar o projeto (leia primeiro)
+
+1. Leia **`docs/LOG.md`** — o diário do projeto: onde paramos, o próximo passo
+   e o histórico por dia. O histórico de conversa não sobrevive entre sessões;
+   esse arquivo sim.
+2. O projeto vive em **dois repositórios**. Se só um estiver anexado à sessão,
+   metade do trabalho fica invisível:
+   - `cassiosalinas/mvp-vasco` — este. Backend, ontologia, grafo, agentes.
+   - `cassiosalinas/clubbrain-demo` — demo pública no Netlify, com as
+     integrações reais de HubSpot, Stripe e Minu.
+3. Ao final da sessão, **acrescente uma entrada no topo do histórico do
+   `docs/LOG.md`**: data, o que mudou, o que ficou aberto.
+
 ## Contexto
 
 O **ClubBrain** é um "Sports Intelligence Operating System": conecta os dados
