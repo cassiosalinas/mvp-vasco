@@ -12,39 +12,62 @@
 
 ## Onde paramos
 
-**Data:** 17/09/2026
+**Data:** 16/10/2026
 
-**Estado:** o projeto vive em **dois repositórios**, e as duas metades ainda
-não se conversam.
+**Estado:** o projeto tem **uma casa só**. `cassiosalinas/mvp-vasco` é a fonte
+de verdade e contém a demo em `demo/`. O `clubbrain-demo` continua existindo
+porque é dele que o Netlify publica — virou **espelho de publicação**, não
+lugar de edição.
 
-| Repositório | Papel | Estado |
-|---|---|---|
-| `cassiosalinas/mvp-vasco` | Backend: ontologia, Knowledge Graph, Fan 360, agentes | Roda local por Docker; sem deploy |
-| `cassiosalinas/clubbrain-demo` | Demo pública: jornada do torcedor, HubSpot, Stripe, Minu | No ar pelo Netlify |
+Fluxo de publicação da demo (um só lugar de edição):
 
-**Próximo passo:** ligar a demo aos endpoints do backend (`/api/v1/...`) em vez
-de ela chamar HubSpot e Stripe direto pelas Netlify Functions. É o que fecha a
-camada 7 do `CLAUDE.md` e faz o grafo virar fonte de verdade da experiência.
+```bash
+# editar em mvp-vasco/demo/ e publicar:
+git subtree push --prefix=demo \
+  https://github.com/cassiosalinas/clubbrain-demo main
+```
 
-**Publicado:** o acesso de escrita ao GitHub, que passou o dia recusando
-`push` com 403, voltou no fim da tarde de 17/09 — e as duas branches foram
-publicadas:
+**Próximo passo (prioridade 1):** o elo que falta — a demo consumindo
+`/api/v1/...` em vez de chamar HubSpot e Stripe direto. O caminho em 4 etapas
+está em `docs/ESCOPO.md`, seção 6. Começa pelo deploy do backend, que nunca
+foi feito.
 
-- `mvp-vasco` → branch `claude/projeto-vasco-ascake` (monorepo com `demo/` +
-  este diário)
-- `clubbrain-demo` → branch `claude/merge-mvp-vasco` (backend em `mvp-vasco/`)
+**Pendente de você:** a branch `claude/publish-mirror` no `clubbrain-demo`
+está publicada mas **não mergeada** — ela remove a cópia congelada do backend
+e marca o repo como espelho. O merge na `main` daquele repo dispara deploy no
+Netlify, então ficou para sua aprovação. O site em si não muda: `netlify.toml`
+e todos os caminhos publicados seguem iguais.
 
-Depois disso, **as duas foram levadas para a `main`** (17/09, fim do dia):
-`mvp-vasco` em `f228301` e `clubbrain-demo` em `4e2f098` — este último com o
-commit `5b23541` do Cássio (relabel do funil de Lifecycle Stage do HubSpot)
-preservado por merge, não rebase.
+**Opcional:** religar o Netlify ao `mvp-vasco` com Base directory `demo/`
+elimina o espelho de vez. Enquanto não for feito, o `subtree push` acima
+resolve.
 
-**Referência rápida:** página com o mapa dos dois repos, tabela de "onde está
-o quê" e links — <https://claude.ai/artifact/TMfbHNzSeTZ84BEQy3iHrQ>
+**Referência rápida:** página com o mapa dos repos, tabela de "onde está o
+quê", documentos e artefatos — <https://claude.ai/artifact/TMfbHNzSeTZ84BEQy3iHrQ>
 
 ---
 
 ## Histórico
+
+### 16/10/2026 — Uma casa só, e o escopo completo escrito
+
+- **Duplicação resolvida.** Os merges cruzados de setembro tinham deixado cada
+  repo com um retrato congelado do outro, e eles já divergiram: o
+  `hubspot-admin.js` estava com 1.317 linhas no ar e 1.246 na cópia dentro do
+  `mvp-vasco`, porque o commit `5b23541` entrou só de um lado. Agora `demo/`
+  é sincronizado do repo vivo por `git subtree pull`, e a cópia do backend
+  dentro do `clubbrain-demo` foi removida.
+- **Decisão: `mvp-vasco` é a casa única**; `clubbrain-demo` é espelho de
+  publicação alimentado por `git subtree push --prefix=demo`.
+- **Criado `docs/ESCOPO.md`** — o super escopo: reconciliação das 5 camadas do
+  `PROMPT_MESTRE.md` com as 7 do `CLAUDE.md`, 11 domínios de dados com o
+  estado real de cada fonte, as 10 lacunas da ontologia (incluindo pontos de
+  fidelidade, campanhas, consentimento e proveniência, que a demo já pratica e
+  o grafo não sabe representar), catálogo de insights por persona, 9 decisões
+  registradas e o corte do gate de 90 dias.
+- **O que não foi feito, de propósito:** nada da camada ACT, nenhum endpoint
+  de escrita, nenhuma ampliação de implementação. O escopo está escrito; o
+  gate segue valendo.
 
 ### 17/09/2026 — Reconciliação dos dois repositórios
 

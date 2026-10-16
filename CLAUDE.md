@@ -13,7 +13,10 @@
    - `cassiosalinas/mvp-vasco` — este. Backend, ontologia, grafo, agentes.
    - `cassiosalinas/clubbrain-demo` — demo pública no Netlify, com as
      integrações reais de HubSpot, Stripe e Minu.
-3. Ao final da sessão, **acrescente uma entrada no topo do histórico do
+3. Para o escopo completo — domínios de dados, lacunas da ontologia, catálogo
+   de insights de IA, decisões registradas e o corte do gate de 90 dias —
+   veja **`docs/ESCOPO.md`**.
+4. Ao final da sessão, **acrescente uma entrada no topo do histórico do
    `docs/LOG.md`**: data, o que mudou, o que ficou aberto.
 
 ## Contexto
