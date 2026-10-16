@@ -461,6 +461,32 @@ function hashSeed(str) {
   for (let i = 0; i < str.length; i++) h = (Math.imul(31, h) + str.charCodeAt(i)) | 0;
   return h >>> 0;
 }
+// Lifecyclestage é a propriedade nativa mais visível do HubSpot inteiro
+// (cabeçalho de todo contato, filtros padrão, relatórios) — por padrão vem
+// com rótulos de venda B2B genérica (Subscriber, Lead, MQL, SQL,
+// Opportunity, Customer, Evangelist). setup() re-rotula essas 7 opções pra
+// linguagem de clube de futebol (mesmo value interno, só o label muda —
+// não quebra nada que dependa do value). deriveLifecycleStage() decide qual
+// das 7 cada torcedor ocupa, na mesma ordem de funil do HubSpot.
+const LIFECYCLE_STAGE_LABELS = {
+  subscriber: 'Torcedor cadastrado',
+  lead: 'Torcedor identificado',
+  marketingqualifiedlead: 'Torcedor engajado',
+  salesqualifiedlead: 'Candidato a sócio-torcedor',
+  opportunity: 'Sócio em risco (oportunidade de retenção)',
+  customer: 'Sócio-torcedor',
+  evangelist: 'Sócio embaixador',
+};
+function deriveLifecycleStage(t) {
+  if (t.embaixador === 'sim') return 'evangelist';
+  if (t.e_socio_torcedor === 'sim' && t.risco_churn === 'alto') return 'opportunity';
+  if (t.e_socio_torcedor === 'sim') return 'customer';
+  if ((Number(t.numero_compras) || 0) >= 2 && (Number(t.engajamento_app) || 0) >= 60) return 'salesqualifiedlead';
+  if ((Number(t.numero_compras) || 0) > 0 || (Number(t.engajamento_app) || 0) >= 50) return 'marketingqualifiedlead';
+  if ((Number(t.engajamento_app) || 0) >= 25) return 'lead';
+  return 'subscriber';
+}
+
 function pick(rnd, arr) { return arr[Math.floor(rnd() * arr.length)]; }
 function pickWeighted(rnd, entries) {
   const total = entries.reduce((s, e) => s + e[1], 0);
@@ -577,9 +603,11 @@ function gerarTorcedor(i, ehSocio) {
   const geracao_familiar = pickWeighted(rnd, [['1ª geração',45],['2ª geração',35],['3ª geração+',20]]);
   const pontos_loyalty = ehSocio ? Math.round(ltv_torcedor * (2 + rnd() * 3)) : Math.round(rnd() < 0.3 ? rnd() * 300 : 0);
 
+  const lifecyclestage = deriveLifecycleStage({ embaixador, e_socio_torcedor: ehSocio ? 'sim' : 'nao', risco_churn, numero_compras, engajamento_app });
+
   return {
     firstname, lastname, email, city, state,
-    nivel_socio, e_socio_torcedor: ehSocio ? 'sim' : 'nao', pontos_loyalty,
+    nivel_socio, e_socio_torcedor: ehSocio ? 'sim' : 'nao', pontos_loyalty, lifecyclestage,
     fan_score, jogador_favorito, ltv_torcedor, risco_churn, propensao_upgrade, segmento_torcedor,
     ...(socio_desde ? { socio_desde } : {}),
     time_coracao: 'Vasco da Gama',
@@ -706,7 +734,49 @@ exports.handler = async function (event) {
           results.push({ name: prop.name, status: r.status, alreadyExists: false, group: groupName, detail: data.message || data });
         }
       }
-      return { statusCode: 200, headers: { 'Content-Type': 'application/json', ...cors }, body: JSON.stringify({ ok: true, groups: groupResults, results }) };
+      // Re-rotula as 7 opções da propriedade nativa lifecyclestage pra
+      // linguagem de clube de futebol — mesmo value interno (subscriber,
+      // lead, marketingqualifiedlead, salesqualifiedlead, opportunity,
+      // customer, evangelist), só o label muda. É o campo mais visível do
+      // HubSpot inteiro (cabeçalho de todo contato), então isso sozinho já
+      // muda muito a "cara" do CRM.
+      let lifecycleResult;
+      try {
+        const lcRes = await hsFetch('/crm/v3/properties/contacts/lifecyclestage');
+        const lcData = await lcRes.json().catch(() => ({}));
+        if (lcRes.ok && Array.isArray(lcData.options)) {
+          const newOptions = lcData.options.map(o => ({ ...o, label: LIFECYCLE_STAGE_LABELS[o.value] || o.label }));
+          const plRes = await hsFetch('/crm/v3/properties/contacts/lifecyclestage', {
+            method: 'PATCH',
+            body: JSON.stringify({ options: newOptions }),
+          });
+          const plData = await plRes.json().catch(() => ({}));
+          lifecycleResult = { ok: plRes.ok, status: plRes.status, detail: plRes.ok ? 'relabeled' : (plData.message || plData) };
+        } else {
+          lifecycleResult = { ok: false, detail: lcData.message || 'lifecyclestage sem "options" na resposta' };
+        }
+      } catch (e) {
+        lifecycleResult = { ok: false, detail: e.message };
+      }
+
+      return { statusCode: 200, headers: { 'Content-Type': 'application/json', ...cors }, body: JSON.stringify({ ok: true, groups: groupResults, results, lifecycleStage: lifecycleResult }) };
+    }
+
+    if (payload.action === 'backfill_lifecycle_stage') {
+      // Grava lifecyclestage nos 500 torcedores já existentes — PATCH/upsert
+      // só desse campo (idProperty:email), nunca toca em mais nada, então
+      // não sobrescreve numero_compras/pontos_loyalty/etc. já reais de
+      // interações que já rolaram (compra, resgate). Em lotes de 100.
+      const all = [...TORCEDORES_VASCO, ...TORCEDORES_GERADOS];
+      const results = [];
+      for (let i = 0; i < all.length; i += 100) {
+        const batch = all.slice(i, i + 100);
+        const inputs = batch.map(t => ({ idProperty: 'email', id: t.email, properties: { lifecyclestage: deriveLifecycleStage(t) } }));
+        const r = await hsFetch('/crm/v3/objects/contacts/batch/upsert', { method: 'POST', body: JSON.stringify({ inputs }) });
+        const data = await r.json().catch(() => ({}));
+        results.push({ offset: i, status: r.status, numAffected: (data.results || []).length, detail: r.ok ? undefined : data });
+      }
+      return { statusCode: 200, headers: { 'Content-Type': 'application/json', ...cors }, body: JSON.stringify({ ok: true, total: all.length, results }) };
     }
 
     if (payload.action === 'seed') {
@@ -730,6 +800,7 @@ exports.handler = async function (event) {
           segmento_torcedor: t.segmento_torcedor,
           ...(t.socio_desde ? { socio_desde: t.socio_desde } : {}),
           time_coracao: 'Vasco da Gama',
+          lifecyclestage: deriveLifecycleStage(t),
           // 1. Identidade & perfil
           data_nascimento: t.data_nascimento,
           genero: t.genero,
@@ -1239,7 +1310,7 @@ exports.handler = async function (event) {
       };
     }
 
-    return { statusCode: 400, headers: cors, body: JSON.stringify({ error: 'Campo "action" deve ser "setup", "seed", "seed_bulk", "lists", "stats", "lookup_fan", "award_loyalty_points", "redeem_reward", "fulfill_stripe_order" ou "create_retention_tasks".' }) };
+    return { statusCode: 400, headers: cors, body: JSON.stringify({ error: 'Campo "action" deve ser "setup", "seed", "seed_bulk", "backfill_lifecycle_stage", "lists", "stats", "lookup_fan", "award_loyalty_points", "redeem_reward", "fulfill_stripe_order" ou "create_retention_tasks".' }) };
   } catch (err) {
     return { statusCode: 502, headers: cors, body: JSON.stringify({ error: 'Falha ao chamar a API do HubSpot: ' + err.message }) };
   }

@@ -2,6 +2,30 @@
 
 Este pacote contém tudo que você precisa para publicar a demo num domínio de verdade, com o chat de IA funcionando (chamando a API da Anthropic através de um backend seguro).
 
+## Os dois lados do projeto
+
+Este repositorio passou a ser um monorepo com as duas metades do ClubBrain
+Vasco, que antes viviam separadas:
+
+| Pasta | O que e | Stack | Estado |
+|---|---|---|---|
+| raiz (`index.html`, `vasco/`, `netlify/`) | Demo publica: jornada do torcedor + integracoes reais (HubSpot, Stripe, Minu) | HTML/JS + Netlify Functions | No ar via Netlify |
+| `mvp-vasco/` | Backend real: ontologia, Knowledge Graph, Fan 360, agentes | Python/FastAPI + Neo4j + Postgres | Roda local via Docker; sem deploy |
+
+O historico dos dois foi preservado: os 12 commits do repositorio `mvp-vasco`
+estao neste log, trazidos com `git subtree` (nao foi copia de arquivos).
+
+**O deploy nao muda.** O `netlify.toml` continua na raiz e o site publica
+exatamente o que publicava antes. A pasta `mvp-vasco/` e codigo de backend,
+nao faz parte do site: uma regra de redirect devolve 404 em `/mvp-vasco/*`
+para o Netlify nao servir o codigo-fonte como arquivo estatico.
+
+Para rodar o backend, veja `mvp-vasco/README.md` (precisa de Docker).
+
+**As duas metades ainda nao se conversam:** a demo chama HubSpot e Stripe
+direto pelas Netlify Functions, sem passar pelo backend. Ligar as duas e o
+trabalho que fecha a camada 7 do `mvp-vasco/CLAUDE.md`.
+
 ## O que tem aqui
 
 ```

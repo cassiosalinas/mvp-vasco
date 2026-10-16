@@ -38,3 +38,13 @@
   from = "/vasco/os"
   to = "/index.html"
   status = 200
+
+# O backend (mvp-vasco/) vive neste repo mas NAO faz parte do site. Como o
+# publish e a raiz ("."), sem esta regra o Netlify serviria o codigo-fonte do
+# backend como arquivo estatico em /mvp-vasco/... — force = true e necessario
+# porque, por padrao, arquivo existente tem precedencia sobre redirect.
+[[redirects]]
+  from = "/mvp-vasco/*"
+  to = "/404.html"
+  status = 404
+  force = true
