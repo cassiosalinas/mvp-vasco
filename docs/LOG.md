@@ -34,8 +34,10 @@ publicadas:
   este diário)
 - `clubbrain-demo` → branch `claude/merge-mvp-vasco` (backend em `mvp-vasco/`)
 
-Nenhuma das duas foi levada para a `main`. A do `clubbrain-demo` em especial
-merece revisão antes: a `main` dispara deploy no Netlify.
+Depois disso, **as duas foram levadas para a `main`** (17/09, fim do dia):
+`mvp-vasco` em `f228301` e `clubbrain-demo` em `4e2f098` — este último com o
+commit `5b23541` do Cássio (relabel do funil de Lifecycle Stage do HubSpot)
+preservado por merge, não rebase.
 
 **Referência rápida:** página com o mapa dos dois repos, tabela de "onde está
 o quê" e links — <https://claude.ai/artifact/TMfbHNzSeTZ84BEQy3iHrQ>
